@@ -363,22 +363,25 @@ async function loadWatch(chapterUrlId) {
     const apiUrl = `${STREAM_ENDPOINT}?chapterUrlId=${encodeURIComponent(chapterUrlId)}`;
     const res = await getJSON(apiUrl);
 
-    // DEBUG: lihat response aslinya di console Vercel (DevTools)
     console.log("getvideo response:", res);
 
-    // Ambil link video dari struktur JSON apapun
     const streamUrl = findFirstMediaUrlDeep(res);
 
     if (!streamUrl) {
-      // tampilkan sedikit clue biar gampang debug
       watchStatus.textContent =
         "Gagal: tidak menemukan link video di JSON /getvideo.\n" +
         "Buka DevTools > Console dan lihat log: 'getvideo response'.";
       return;
     }
 
-    watchStatus.textContent = `Memutar dari: ${streamUrl.slice(0, 60)}...`;
-    playVideo(streamUrl);
+    console.log("Before resolve:", streamUrl);
+
+    const finalUrl = await resolveFinalUrl(streamUrl);
+
+    console.log("After resolve:", finalUrl);
+
+    watchStatus.textContent = `Memutar dari: ${finalUrl.slice(0, 60)}...`;
+    playVideo(finalUrl);
   } catch (e) {
     watchStatus.textContent = `Gagal memutar: ${e.message}`;
   }
