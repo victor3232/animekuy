@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AnimeBox</title>
+    <link rel="stylesheet" href="./style.css" />
+    <!-- HLS player untuk m3u8 -->
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-red">Anime</span><span class="brand-white">Box</span>
+      </div>
+      <button class="icon-btn" id="btnHome" title="Home">🏠</button>
+    </header>
+
+    <main class="container">
+      <!-- Search -->
+      <section class="searchCard">
+        <div class="searchRow">
+          <span class="searchIcon">🔎</span>
+          <input id="q" class="searchInput" placeholder="Cari judul atau tag anime..." />
+        </div>
+        <button id="btnSearch" class="btnPrimary">Cari</button>
+        <div class="tabs">
+          <button class="tab active" data-tab="latest">🔥 Trending</button>
+          <button class="tab" data-tab="latest2">⭐ Terbaru</button>
+          <button class="tab" data-tab="latest3">⚡ Rekomendasi</button>
+        </div>
+      </section>
+
+      <!-- Pages -->
+      <section id="pageHome" class="page">
+        <div class="sectionHeader">
+          <div class="titleBlock">
+            <div class="accentBar"></div>
+            <h2 id="homeTitle">Episode Terbaru</h2>
+          </div>
+          <button id="btnRefresh" class="btnGhost">Lihat Semua</button>
+        </div>
+
+        <div id="grid" class="grid"></div>
+        <div id="status" class="status"></div>
+      </section>
+
+      <section id="pageDetail" class="page hidden">
+        <button id="btnBackFromDetail" class="btnGhost">← Kembali</button>
+
+        <div class="detailHero">
+          <img id="detailCover" class="detailCover" alt="cover" />
+          <div class="detailInfo">
+            <h1 id="detailTitle" class="detailTitle"></h1>
+            <div id="detailMeta" class="detailMeta"></div>
+            <p id="detailSynopsis" class="detailSynopsis"></p>
+          </div>
+        </div>
+
+        <div class="detailActions">
+          <label class="selectWrap">
+            <span>Resolusi:</span>
+            <select id="reso">
+              <option value="480p" selected>480p (default)</option>
+              <option value="360p">360p</option>
+              <option value="720p">720p</option>
+              <option value="1080p">1080p</option>
+            </select>
+          </label>
+        </div>
+
+        <h3 class="subTitle">Daftar Episode</h3>
+        <div id="episodeList" class="episodeList"></div>
+        <div id="detailStatus" class="status"></div>
+      </section>
+
+      <section id="pageWatch" class="page hidden">
+        <button id="btnBackFromWatch" class="btnGhost">← Kembali</button>
+
+        <h2 id="watchTitle" class="watchTitle">Memutar...</h2>
+        <div class="playerCard">
+          <video id="video" class="video" controls playsinline></video>
+        </div>
+        <div id="watchStatus" class="status"></div>
+      </section>
+    </main>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
