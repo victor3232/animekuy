@@ -93,6 +93,51 @@ async function getJSON(url) {
   return await r.json();
 }
 
+function looksLikeMediaUrl(s) {
+  if (typeof s !== "string") return false;
+  const v = s.trim();
+  if (!/^https?:\/\//i.test(v)) return false;
+  return (
+    v.includes(".m3u8") ||
+    v.includes(".mp4") ||
+    v.includes(".mpd") ||
+    v.includes("/m3u8") ||
+    v.includes("playlist") ||
+    v.includes("manifest")
+  );
+}
+
+function findFirstMediaUrlDeep(obj, depth = 0) {
+  if (depth > 8) return null; // biar aman
+  if (!obj) return null;
+
+  // Kalau response string langsung
+  if (typeof obj === "string") return looksLikeMediaUrl(obj) ? obj : null;
+
+  // Kalau array
+  if (Array.isArray(obj)) {
+    for (const item of obj) {
+      const found = findFirstMediaUrlDeep(item, depth + 1);
+      if (found) return found;
+    }
+    return null;
+  }
+
+  // Kalau object
+  if (typeof obj === "object") {
+    for (const key of Object.keys(obj)) {
+      const val = obj[key];
+      // Kadang fieldnya "url", "file", "src", "video", "link", "iframe", dll
+      if (typeof val === "string" && looksLikeMediaUrl(val)) return val;
+
+      const found = findFirstMediaUrlDeep(val, depth + 1);
+      if (found) return found;
+    }
+  }
+
+  return null;
+}
+
 // =====================
 // Render Card Grid
 // =====================
@@ -296,7 +341,6 @@ async function loadWatch(chapterUrlId) {
   watchTitle.textContent = `${animeTitle} • Player`;
   watchStatus.textContent = "Mengambil link streaming...";
 
-  // stop previous
   if (hls) {
     hls.destroy();
     hls = null;
@@ -306,29 +350,27 @@ async function loadWatch(chapterUrlId) {
   video.load();
 
   try {
-    const url = `${STREAM_ENDPOINT}?chapterUrlId=${encodeURIComponent(chapterUrlId)}`;
-    const res = await getJSON(url);
+    const apiUrl = `${STREAM_ENDPOINT}?chapterUrlId=${encodeURIComponent(chapterUrlId)}`;
+    const res = await getJSON(apiUrl);
 
-    // cari link streaming yang paling mungkin
-    const streamUrl =
-      res?.url ||
-      res?.streamUrl ||
-      res?.stream ||
-      res?.data?.url ||
-      res?.data?.streamUrl ||
-      (typeof res === "string" ? res : null);
+    // DEBUG: lihat response aslinya di console Vercel (DevTools)
+    console.log("getvideo response:", res);
+
+    // Ambil link video dari struktur JSON apapun
+    const streamUrl = findFirstMediaUrlDeep(res);
 
     if (!streamUrl) {
-      throw new Error("Link video tidak ditemukan di response /getvideo.");
+      // tampilkan sedikit clue biar gampang debug
+      watchStatus.textContent =
+        "Gagal: tidak menemukan link video di JSON /getvideo.\n" +
+        "Buka DevTools > Console dan lihat log: 'getvideo response'.";
+      return;
     }
 
+    watchStatus.textContent = `Memutar dari: ${streamUrl.slice(0, 60)}...`;
     playVideo(streamUrl);
-    watchStatus.textContent = "";
   } catch (e) {
-    watchStatus.textContent =
-      `Gagal memutar: ${e.message}
-
-Pastikan response /getvideo memang mengandung field url/streamUrl. Kalau fieldnya beda, bilang aku field-nya namanya apa.`;
+    watchStatus.textContent = `Gagal memutar: ${e.message}`;
   }
 }
 
