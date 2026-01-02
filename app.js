@@ -138,6 +138,16 @@ function findFirstMediaUrlDeep(obj, depth = 0) {
   return null;
 }
 
+async function resolveFinalUrl(url) {
+  try {
+    // method HEAD kadang ditolak, jadi fallback ke GET
+    const r = await fetch(url, { method: "GET", redirect: "follow" });
+    return r.url || url; // r.url adalah final setelah redirect
+  } catch {
+    return url;
+  }
+}
+
 // =====================
 // Render Card Grid
 // =====================
