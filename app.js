@@ -10,7 +10,7 @@ const ENDPOINT_DETAIL = `${API_BASE}/detail`; // ?urlId=
 
 // Endpoint streaming (di swagger kamu terlihat /api/anime/ge...)
 // Jika error 404, ganti sesuai endpoint di Swagger kamu.
-const STREAM_ENDPOINT = `${API_BASE}/get`; // ?chapterUrlId=...&reso=480p
+const STREAM_ENDPOINT = `${API_BASE}/getvideo`; // ?chapterUrlId= // ?chapterUrlId=...&reso=480p
 
 // =====================
 // Helper DOM
@@ -305,26 +305,21 @@ async function loadWatch(chapterUrlId) {
   video.removeAttribute("src");
   video.load();
 
-  const reso = resoSelect.value || "480p";
-
   try {
-    // Ini inti jawaban untuk kebingungan kamu:
-    // chapterUrlId = ambil dari detail -> chapter[].url (contoh al-150441-1135)
-    // lalu request streaming:
-    const url = `${STREAM_ENDPOINT}?chapterUrlId=${encodeURIComponent(chapterUrlId)}&reso=${encodeURIComponent(reso)}`;
+    const url = `${STREAM_ENDPOINT}?chapterUrlId=${encodeURIComponent(chapterUrlId)}`;
     const res = await getJSON(url);
 
-    // Bentuk response bisa beda-beda, jadi kita cari link paling mungkin:
+    // cari link streaming yang paling mungkin
     const streamUrl =
       res?.url ||
-      res?.stream ||
       res?.streamUrl ||
+      res?.stream ||
       res?.data?.url ||
       res?.data?.streamUrl ||
-      (Array.isArray(res?.data) ? res.data[0]?.url : null);
+      (typeof res === "string" ? res : null);
 
     if (!streamUrl) {
-      throw new Error("Link streaming tidak ditemukan di response endpoint get.");
+      throw new Error("Link video tidak ditemukan di response /getvideo.");
     }
 
     playVideo(streamUrl);
@@ -333,10 +328,7 @@ async function loadWatch(chapterUrlId) {
     watchStatus.textContent =
       `Gagal memutar: ${e.message}
 
-✅ Pastikan STREAM_ENDPOINT benar.
-Sekarang: ${STREAM_ENDPOINT}
-
-Kalau di Swagger endpoint-nya bukan /get, ganti konstanta STREAM_ENDPOINT di app.js sesuai path asli.`;
+Pastikan response /getvideo memang mengandung field url/streamUrl. Kalau fieldnya beda, bilang aku field-nya namanya apa.`;
   }
 }
 
